@@ -1,13 +1,24 @@
-import express, { Application, Request, Response } from 'express';
+// src/app.ts
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { errorHandler } from '@presentation/middleware/errorHandler';
+import { requestLogger } from '@presentation/middleware/requestLogger';
 
-const app: Application = express();
+export function createApp(): express.Application {
+  const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+  app.use(helmet());
+  app.use(cors());
+  app.use(express.json());
+  app.use(requestLogger);
 
-// Basic route
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello');
-});
+  // Routes mounted here in Phase 3
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
 
-export default app;
+  app.use(errorHandler);
+
+  return app;
+}

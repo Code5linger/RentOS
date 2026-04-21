@@ -1,14 +1,40 @@
-import 'dotenv/config';
-import app from './app.js'; // .js extension required for NodeNext ESM resolution
+// src/server.ts
+import { createApp } from './app';
+import { env } from '@config/env';
+import { prisma } from '@infrastructure/database/prismaClient';
+import { getRedisClient } from '@infrastructure/redis/redisClient';
 
-const bootstrap = () => {
-  try {
-    app.listen(process.env.PORT, () => {
-      console.log(`Server is running on http://localhost:${process.env.PORT}`);
+async function bootstrap(): Promise<void> {
+  // Verify DB connection before accepting traffic
+  await prisma.$connect();
+  console.log('[DB] Connected');
+
+  const redis = getRedisClient();
+  await redis.connect();
+
+  const app = createApp();
+
+  const server = app.listen(env.PORT, () => {
+    console.log(
+      `[Server] RentOS running on port ${env.PORT} (${env.NODE_ENV})`,
+    );
+  });
+
+  // Graceful shutdown
+  const shutdown = async (signal: string): Promise<void> => {
+    console.log(`[Server] ${signal} received — shutting down gracefully`);
+    server.close(async () => {
+      await prisma.$disconnect();
+      await redis.quit();
+      process.exit(0);
     });
-  } catch (error) {
-    console.log(`Failed to start server! Cause of: ${error}`);
-  }
-};
+  };
 
-bootstrap();
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
+bootstrap().catch((err) => {
+  console.error('[Server] Failed to start:', err);
+  process.exit(1);
+});
