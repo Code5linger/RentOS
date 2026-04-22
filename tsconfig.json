@@ -27,6 +27,6 @@
       "@config/*": ["./src/config/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/unit/use-cases/register.use-case.ts", "tests/unit/use-cases/refresh-token.use-case.ts", "tests/unit/use-cases/login.use-case.ts"],
   "exclude": ["node_modules", "dist", "tests"]
 }
