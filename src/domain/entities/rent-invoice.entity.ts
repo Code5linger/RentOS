@@ -1,15 +1,14 @@
-// src/domain/entities/RentInvoice.ts
-import { InvoiceStatus } from '@domain/enums';
-import { Decimal } from '@prisma/client/runtime/library';
+// rent-invoice.entity.ts
+import { InvoiceStatus } from '../enums';
 
-export interface RentInvoice {
+export interface RentInvoiceEntity {
   id: string;
   leaseId: string;
   ownerId: string;
   billingPeriodStart: Date;
   billingPeriodEnd: Date;
-  totalAmount: Decimal;
-  paidAmount: Decimal;
+  totalAmount: string; // Decimal as string
+  paidAmount: string; // Decimal as string
   dueDate: Date;
   status: InvoiceStatus;
   createdAt: Date;

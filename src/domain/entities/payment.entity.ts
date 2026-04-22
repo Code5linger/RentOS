@@ -1,12 +1,11 @@
-// src/domain/entities/Payment.ts
-import { PaymentMethod, PaymentStatus } from '@domain/enums';
-import { Decimal } from '@prisma/client/runtime/library';
+// payment.entity.ts
+import { PaymentMethod, PaymentStatus } from '../enums';
 
-export interface Payment {
+export interface PaymentEntity {
   id: string;
   invoiceId: string;
   ownerId: string;
-  amount: Decimal;
+  amount: string; // Decimal as string
   method: PaymentMethod;
   status: PaymentStatus;
   transactionRef: string | null;

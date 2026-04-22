@@ -2,7 +2,7 @@
 import { createApp } from './app';
 import { env } from '@config/env';
 import { prisma } from '@infrastructure/database/prismaClient';
-import { getRedisClient } from '@infrastructure/redis/redisClient';
+import { getRedisClient } from '@infrastructure/redis/redis.client';
 
 async function bootstrap(): Promise<void> {
   // Verify DB connection before accepting traffic

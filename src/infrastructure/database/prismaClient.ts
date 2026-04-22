@@ -1,20 +1,28 @@
-// src/infrastructure/database/prismaClient.ts
 import { PrismaClient } from '@prisma/client';
-import { env } from '@config/env';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
+export const prisma: PrismaClient =
   globalForPrisma.prisma ??
   new PrismaClient({
     log:
-      env.NODE_ENV === 'development'
+      process.env.NODE_ENV === 'development'
         ? ['query', 'warn', 'error']
         : ['warn', 'error'],
   });
 
-if (env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
+}
+
+export async function connectDatabase(): Promise<void> {
+  await prisma.$connect();
+  console.log('✅ Database connected');
+}
+
+export async function disconnectDatabase(): Promise<void> {
+  await prisma.$disconnect();
+  console.log('Database disconnected');
 }

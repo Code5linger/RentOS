@@ -1,6 +1,6 @@
 // src/infrastructure/container/index.ts
 import { prisma } from '@infrastructure/database/prismaClient';
-import { getRedisClient } from '@infrastructure/redis/redisClient';
+import { getRedisClient } from '@infrastructure/redis/redis.client';
 
 // Repositories
 import { PrismaUserRepository } from '@infrastructure/database/repositories/PrismaUserRepository';

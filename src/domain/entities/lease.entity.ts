@@ -1,15 +1,14 @@
-// src/domain/entities/Lease.ts
-import { LeaseStatus } from '@domain/enums';
-import { Decimal } from '@prisma/client/runtime/library';
+// lease.entity.ts
+import { LeaseStatus } from '../enums';
 
-export interface Lease {
+export interface LeaseEntity {
   id: string;
   unitId: string;
   tenantId: string;
   ownerId: string;
   startDate: Date;
   endDate: Date | null;
-  monthlyRent: Decimal;
+  monthlyRent: string; // Decimal as string — never convert to float
   billingDay: number;
   status: LeaseStatus;
   createdAt: Date;

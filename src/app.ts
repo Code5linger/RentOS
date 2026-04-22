@@ -1,24 +1,30 @@
-// src/app.ts
-import express from 'express';
+import express, { Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { errorHandler } from '@presentation/middleware/errorHandler';
-import { requestLogger } from '@presentation/middleware/requestLogger';
+import { json } from 'express';
+import { apiRouter } from './presentation/routes';
+import { errorMiddleware } from './presentation/middleware/error.middleware';
 
-export function createApp(): express.Application {
+export function createApp(): Application {
   const app = express();
 
+  // Security
   app.use(helmet());
   app.use(cors());
-  app.use(express.json());
-  app.use(requestLogger);
 
-  // Routes mounted here in Phase 3
+  // Parsing
+  app.use(json());
+
+  // Health check — outside versioned routes
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  app.use(errorHandler);
+  // All API routes
+  app.use('/api/v1', apiRouter);
+
+  // Error handler — must be last
+  app.use(errorMiddleware);
 
   return app;
 }
