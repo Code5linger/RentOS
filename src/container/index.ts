@@ -1,8 +1,11 @@
+// src/container/index.ts — full wiring through Phase 4
 import { prisma } from '@infrastructure/database/prisma.client';
 
 // Repositories
 import { UserRepositoryImpl } from '@infrastructure/database/repositories/user.repository.impl';
 import { RefreshTokenRepositoryImpl } from '@infrastructure/database/repositories/refresh-token.repository.impl';
+import { PropertyRepositoryImpl } from '@infrastructure/database/repositories/property.repository.impl';
+import { UnitRepositoryImpl } from '@infrastructure/database/repositories/unit.repository.impl';
 import { LeaseRepositoryImpl } from '@infrastructure/database/repositories/lease.repository.impl';
 import { RentInvoiceRepositoryImpl } from '@infrastructure/database/repositories/rent-invoice.repository.impl';
 import { PaymentRepositoryImpl } from '@infrastructure/database/repositories/payment.repository.impl';
@@ -11,17 +14,33 @@ import { PaymentRepositoryImpl } from '@infrastructure/database/repositories/pay
 import { PasswordService } from '@infrastructure/auth/password.service';
 import { TokenService } from '@infrastructure/auth/token.service';
 
-// Use Cases
+// Auth use cases
 import { RegisterUseCase } from '@application/auth/use-cases/register.use-case';
 import { LoginUseCase } from '@application/auth/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case';
 
+// Property use cases
+import { CreatePropertyUseCase } from '@application/property/use-cases/create-property.use-case';
+import { GetPropertiesUseCase } from '@application/property/use-cases/get-properties.use-case';
+import { UpdatePropertyUseCase } from '@application/property/use-cases/update-property.use-case';
+import { DeletePropertyUseCase } from '@application/property/use-cases/delete-property.use-case';
+import { CreateUnitUseCase } from '@application/property/use-cases/create-unit.use-case';
+import { DeleteUnitUseCase } from '@application/property/use-cases/delete-unit.use-case';
+
+// Lease use cases
+import { CreateLeaseUseCase } from '@application/lease/use-cases/create-lease.use-case';
+import { EndLeaseUseCase } from '@application/lease/use-cases/end-lease.use-case';
+
 // Controllers
 import { AuthController } from '@presentation/controllers/auth.controller';
+import { PropertyController } from '@presentation/controllers/property.controller';
+import { LeaseController } from '@presentation/controllers/lease.controller';
 
 // ── Repositories ────────────────────────────────────────────
 export const userRepository = new UserRepositoryImpl(prisma);
 export const refreshTokenRepository = new RefreshTokenRepositoryImpl(prisma);
+export const propertyRepository = new PropertyRepositoryImpl(prisma);
+export const unitRepository = new UnitRepositoryImpl(prisma);
 export const leaseRepository = new LeaseRepositoryImpl(prisma);
 export const rentInvoiceRepository = new RentInvoiceRepositoryImpl(prisma);
 export const paymentRepository = new PaymentRepositoryImpl(prisma);
@@ -30,30 +49,71 @@ export const paymentRepository = new PaymentRepositoryImpl(prisma);
 export const passwordService = new PasswordService();
 export const tokenService = new TokenService();
 
-// ── Use Cases ───────────────────────────────────────────────
+// ── Auth Use Cases ───────────────────────────────────────────
 export const registerUseCase = new RegisterUseCase(
   userRepository,
   refreshTokenRepository,
   passwordService,
   tokenService,
 );
-
 export const loginUseCase = new LoginUseCase(
   userRepository,
   refreshTokenRepository,
   passwordService,
   tokenService,
 );
-
 export const refreshTokenUseCase = new RefreshTokenUseCase(
   userRepository,
   refreshTokenRepository,
   tokenService,
 );
 
-// ── Controllers ─────────────────────────────────────────────
+// ── Property Use Cases ───────────────────────────────────────
+export const createPropertyUseCase = new CreatePropertyUseCase(
+  propertyRepository,
+);
+export const getPropertiesUseCase = new GetPropertiesUseCase(
+  propertyRepository,
+);
+export const updatePropertyUseCase = new UpdatePropertyUseCase(
+  propertyRepository,
+);
+export const deletePropertyUseCase = new DeletePropertyUseCase(
+  propertyRepository,
+  unitRepository,
+);
+export const createUnitUseCase = new CreateUnitUseCase(
+  unitRepository,
+  propertyRepository,
+);
+export const deleteUnitUseCase = new DeleteUnitUseCase(unitRepository);
+
+// ── Lease Use Cases ──────────────────────────────────────────
+export const createLeaseUseCase = new CreateLeaseUseCase(
+  leaseRepository,
+  unitRepository,
+  userRepository,
+);
+export const endLeaseUseCase = new EndLeaseUseCase(leaseRepository);
+
+// ── Controllers ──────────────────────────────────────────────
 export const authController = new AuthController(
   registerUseCase,
   loginUseCase,
   refreshTokenUseCase,
+);
+
+export const propertyController = new PropertyController(
+  createPropertyUseCase,
+  getPropertiesUseCase,
+  updatePropertyUseCase,
+  deletePropertyUseCase,
+  createUnitUseCase,
+  deleteUnitUseCase,
+);
+
+export const leaseController = new LeaseController(
+  createLeaseUseCase,
+  endLeaseUseCase,
+  leaseRepository,
 );
