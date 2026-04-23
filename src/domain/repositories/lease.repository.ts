@@ -28,6 +28,7 @@ export interface ILeaseRepository {
 }
 
 export interface CreateLeaseData {
+  propertyId: string;
   unitId: string;
   tenantId: string;
   ownerId: string;

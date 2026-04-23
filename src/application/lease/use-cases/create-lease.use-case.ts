@@ -23,8 +23,8 @@ export class CreateLeaseUseCase {
     ownerId: string,
     actorId: string,
   ): Promise<LeaseEntity> {
-    // 1. Verify unit belongs to owner
-    await this.unitRepository.findByIdOrThrow(dto.unitId, ownerId);
+    // 1. Verify unit belongs to owner and get propertyId
+    const unit = await this.unitRepository.findByIdOrThrow(dto.unitId, ownerId);
 
     // 2. Verify unit is not already leased
     const existingLease = await this.leaseRepository.findActiveByUnit(
@@ -46,6 +46,7 @@ export class CreateLeaseUseCase {
 
     // 4. Create lease
     const lease = await this.leaseRepository.create({
+      propertyId: unit.propertyId,
       unitId: dto.unitId,
       tenantId: dto.tenantId,
       ownerId,

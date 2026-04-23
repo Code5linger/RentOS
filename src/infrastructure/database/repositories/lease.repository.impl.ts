@@ -57,6 +57,7 @@ export class LeaseRepositoryImpl implements ILeaseRepository {
   async create(data: CreateLeaseData): Promise<LeaseEntity> {
     const row = await this.db.lease.create({
       data: {
+        propertyId: data.propertyId,
         unitId: data.unitId,
         tenantId: data.tenantId,
         ownerId: data.ownerId,
