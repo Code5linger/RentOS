@@ -150,3 +150,34 @@ export const markLateWorker = createMarkLateWorker(markLateInvoicesUseCase);
 
 // ── Controllers ──────────────────────────────────────────────
 export const invoiceController = new InvoiceController(rentInvoiceRepository);
+
+// Additions to src/container/index.ts
+
+import { IdempotencyKeyRepositoryImpl } from '@infrastructure/database/repositories/idempotency-key.repository.impl';
+import { InitiatePaymentUseCase } from '@application/payment/use-cases/initiate-payment.use-case';
+import { GetPaymentsUseCase } from '@application/payment/use-cases/get-payments.use-case';
+import { PaymentController } from '@presentation/controllers/payment.controller';
+
+// ── Repositories ─────────────────────────────────────────────
+export const idempotencyKeyRepository = new IdempotencyKeyRepositoryImpl(
+  prisma,
+);
+
+// ── Payment Use Cases ────────────────────────────────────────
+export const initiatePaymentUseCase = new InitiatePaymentUseCase(
+  paymentRepository, // PaymentRepositoryImpl — needs createWithInvoiceUpdate
+  rentInvoiceRepository,
+  idempotencyKeyRepository,
+);
+
+export const getPaymentsUseCase = new GetPaymentsUseCase(
+  paymentRepository,
+  rentInvoiceRepository,
+);
+
+// ── Controllers ──────────────────────────────────────────────
+export const paymentController = new PaymentController(
+  initiatePaymentUseCase,
+  getPaymentsUseCase,
+  rentInvoiceRepository,
+);
