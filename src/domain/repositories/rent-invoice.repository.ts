@@ -22,6 +22,20 @@ export interface IRentInvoiceRepository {
     ownerId: string,
   ): Promise<RentInvoiceEntity>;
   bulkUpdateStatus(ids: string[], status: InvoiceStatus): Promise<void>;
+  // Add to src/domain/repositories/rent-invoice.repository.ts
+
+  findAllByTenant(
+    tenantId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity[]>;
+  findByIdAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity | null>;
+  findByIdOrThrowAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity>;
 }
 
 export interface CreateInvoiceData {

@@ -108,4 +108,33 @@ export class LeaseRepositoryImpl implements ILeaseRepository {
       status: raw.status as LeaseStatus,
     };
   }
+
+  // Add to src/infrastructure/database/repositories/lease.repository.impl.ts
+
+  async findAllByTenant(tenantId: string): Promise<LeaseEntity[]> {
+    const rows = await this.db.lease.findMany({
+      where: { tenantId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map(this.toEntity.bind(this));
+  }
+
+  async findByIdAsTenant(
+    leaseId: string,
+    tenantId: string,
+  ): Promise<LeaseEntity | null> {
+    const row = await this.db.lease.findFirst({
+      where: { id: leaseId, tenantId, deletedAt: null },
+    });
+    return row ? this.toEntity(row) : null;
+  }
+
+  async findByIdOrThrowAsTenant(
+    leaseId: string,
+    tenantId: string,
+  ): Promise<LeaseEntity> {
+    const lease = await this.findByIdAsTenant(leaseId, tenantId);
+    if (!lease) throw new NotFoundError('Lease', leaseId);
+    return lease;
+  }
 }

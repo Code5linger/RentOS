@@ -13,6 +13,12 @@ export interface IPaymentRepository {
     status: PaymentStatus,
     transactionRef?: string,
   ): Promise<PaymentEntity>;
+  // Add to src/domain/repositories/payment.repository.ts
+
+  findByInvoiceAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<PaymentEntity[]>;
 }
 
 export interface CreatePaymentData {

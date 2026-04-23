@@ -14,6 +14,17 @@ export interface ILeaseRepository {
     status: LeaseStatus,
     ownerId: string,
   ): Promise<LeaseEntity>;
+  // Add to src/domain/repositories/lease.repository.ts
+
+  findAllByTenant(tenantId: string): Promise<LeaseEntity[]>;
+  findByIdAsTenant(
+    leaseId: string,
+    tenantId: string,
+  ): Promise<LeaseEntity | null>;
+  findByIdOrThrowAsTenant(
+    leaseId: string,
+    tenantId: string,
+  ): Promise<LeaseEntity>;
 }
 
 export interface CreateLeaseData {

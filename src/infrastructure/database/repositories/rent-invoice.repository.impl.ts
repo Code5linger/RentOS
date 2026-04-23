@@ -163,4 +163,56 @@ export class RentInvoiceRepositoryImpl implements IRentInvoiceRepository {
       status: raw.status as InvoiceStatus,
     };
   }
+
+  // Add to src/infrastructure/database/repositories/rent-invoice.repository.impl.ts
+
+  async findAllByTenant(
+    tenantId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity[]> {
+    if (leaseIds.length === 0) return [];
+
+    const rows = await this.db.rentInvoice.findMany({
+      where: {
+        leaseId: { in: leaseIds },
+        deletedAt: null,
+      },
+      orderBy: { billingPeriodStart: 'desc' },
+    });
+    return rows.map(this.toEntity.bind(this));
+  }
+
+  async findByIdAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity | null> {
+    if (leaseIds.length === 0) return null;
+
+    const row = await this.db.rentInvoice.findFirst({
+      where: {
+        id: invoiceId,
+        leaseId: { in: leaseIds },
+        deletedAt: null,
+      },
+    });
+    return row ? this.toEntity(row) : null;
+  }
+
+  async findByIdOrThrowAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<RentInvoiceEntity> {
+    const invoice = await this.findByIdAsTenant(invoiceId, leaseIds);
+    if (!invoice) throw new NotFoundError('RentInvoice', invoiceId);
+    return invoice;
+  }
+
+  // Add to src/infrastructure/database/repositories/unit.repository.impl.ts
+  async findByIdForTenant(id: string): Promise<UnitEntity> {
+    const row = await this.db.unit.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!row) throw new NotFoundError('Unit', id);
+    return this.toEntity(row);
+  }
 }

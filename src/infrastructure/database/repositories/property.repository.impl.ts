@@ -61,6 +61,15 @@ export class PropertyRepositoryImpl implements IPropertyRepository {
     });
   }
 
+  // Add to src/infrastructure/database/repositories/property.repository.impl.ts
+  async findByIdForTenant(id: string): Promise<PropertyEntity> {
+    const row = await this.db.property.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!row) throw new NotFoundError('Property', id);
+    return this.toEntity(row);
+  }
+
   private toEntity(raw: {
     id: string;
     ownerId: string;

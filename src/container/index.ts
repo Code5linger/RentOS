@@ -181,3 +181,54 @@ export const paymentController = new PaymentController(
   getPaymentsUseCase,
   rentInvoiceRepository,
 );
+
+// Additions to src/container/index.ts
+
+import { TenantContextService } from '@application/tenant/services/tenant-context.service';
+import { GetMyLeasesUseCase } from '@application/tenant/use-cases/get-my-leases.use-case';
+import { GetMyInvoicesUseCase } from '@application/tenant/use-cases/get-my-invoices.use-case';
+import { GetMyInvoiceDetailUseCase } from '@application/tenant/use-cases/get-my-invoice-detail.use-case';
+import { GetMyPaymentHistoryUseCase } from '@application/tenant/use-cases/get-my-payment-history.use-case';
+import { GetMyDashboardUseCase } from '@application/tenant/use-cases/get-my-dashboard.use-case';
+import { TenantController } from '@presentation/controllers/tenant.controller';
+
+// ── Tenant Services ──────────────────────────────────────────
+export const tenantContextService = new TenantContextService(leaseRepository);
+
+// ── Tenant Use Cases ─────────────────────────────────────────
+export const getMyLeasesUseCase = new GetMyLeasesUseCase(
+  tenantContextService,
+  unitRepository,
+  propertyRepository,
+);
+
+export const getMyInvoicesUseCase = new GetMyInvoicesUseCase(
+  tenantContextService,
+  rentInvoiceRepository,
+);
+
+export const getMyInvoiceDetailUseCase = new GetMyInvoiceDetailUseCase(
+  tenantContextService,
+  rentInvoiceRepository,
+  paymentRepository,
+);
+
+export const getMyPaymentHistoryUseCase = new GetMyPaymentHistoryUseCase(
+  tenantContextService,
+  rentInvoiceRepository,
+  paymentRepository,
+);
+
+export const getMyDashboardUseCase = new GetMyDashboardUseCase(
+  tenantContextService,
+  rentInvoiceRepository,
+);
+
+// ── Tenant Controller ────────────────────────────────────────
+export const tenantController = new TenantController(
+  getMyLeasesUseCase,
+  getMyInvoicesUseCase,
+  getMyInvoiceDetailUseCase,
+  getMyPaymentHistoryUseCase,
+  getMyDashboardUseCase,
+);

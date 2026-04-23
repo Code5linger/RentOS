@@ -134,4 +134,25 @@ export class PaymentRepositoryImpl implements IPaymentRepository {
       status: raw.status as PaymentStatus,
     };
   }
+
+  // Add to src/infrastructure/database/repositories/payment.repository.impl.ts
+
+  async findByInvoiceAsTenant(
+    invoiceId: string,
+    leaseIds: string[],
+  ): Promise<PaymentEntity[]> {
+    if (leaseIds.length === 0) return [];
+
+    // Double-scope: payment's invoice must belong to one of tenant's leases
+    const rows = await this.db.payment.findMany({
+      where: {
+        invoiceId,
+        invoice: {
+          leaseId: { in: leaseIds },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map(this.toEntity.bind(this));
+  }
 }

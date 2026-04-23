@@ -10,6 +10,8 @@ export interface IPropertyRepository {
     data: UpdatePropertyData,
   ): Promise<PropertyEntity>;
   softDelete(id: string, ownerId: string): Promise<void>;
+  // Add to src/domain/repositories/property.repository.ts
+  findByIdForTenant(id: string): Promise<PropertyEntity>;
 }
 
 export interface CreatePropertyData {
