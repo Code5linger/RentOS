@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Install OpenSSL for Prisma compatibility
+RUN apk add --no-cache openssl-dev
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -8,6 +11,9 @@ COPY prisma ./prisma/
 RUN npm ci --ignore-scripts
 
 COPY . .
+
+# Remove prisma.config.ts to avoid Prisma v7 configuration issues in Docker
+RUN rm -f prisma.config.ts
 
 RUN npx prisma generate
 RUN npm run build
