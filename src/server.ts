@@ -1,18 +1,20 @@
-import express, { Application, Request, Response } from 'express';
+import 'dotenv/config';
+import app from './app.js';
 
-const app: Application = express();
 const PORT: number = Number(process.env.PORT) || 5000;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('RentOS');
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const bootstrap = () => {
+  try {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(
+        `RentOS Backend Server is running on http://localhost:${process.env.PORT}`,
+      );
+    });
+  } catch (error) {
+    console.log(`Failed to start server! Cause of: ${error}`);
+  }
+};
 
 // module.exports = app;
 export default app;
+bootstrap();
