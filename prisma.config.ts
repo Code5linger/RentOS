@@ -1,12 +1,13 @@
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
-// Debug: Log environment variables in production
-if (process.env.NODE_ENV === 'production') {
-  console.log('DATABASE_URL available:', !!process.env.DATABASE_URL);
-  if (process.env.DATABASE_URL) {
-    console.log('DATABASE_URL starts with:', process.env.DATABASE_URL.split('://')[0]);
-  }
+// Always log DATABASE_URL status for debugging
+console.log('DATABASE_URL available:', !!process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+  console.log('DATABASE_URL starts with:', process.env.DATABASE_URL.split('://')[0]);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+} else {
+  console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('DATABASE')));
 }
 
 // if (!process.env['DATABASE_URL']) {
