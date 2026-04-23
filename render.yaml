@@ -21,3 +21,4 @@ services:
     name: rentos-db
     plan: free
     ipAllowList: []
+    databaseName: rentos_db
