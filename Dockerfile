@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+# ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db"
+
 RUN npm run build
 
 EXPOSE 5000
