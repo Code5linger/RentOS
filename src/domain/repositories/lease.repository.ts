@@ -7,6 +7,7 @@ export interface ILeaseRepository {
   findByIdOrThrow(id: string, ownerId: string): Promise<LeaseEntity>;
   findActiveByUnit(unitId: string): Promise<LeaseEntity | null>;
   findAllByOwner(ownerId: string, status?: LeaseStatus): Promise<LeaseEntity[]>;
+  findAllActive(): Promise<LeaseEntity[]>;
   create(data: CreateLeaseData): Promise<LeaseEntity>;
   updateStatus(
     id: string,

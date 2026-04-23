@@ -1,19 +1,19 @@
+// src/infrastructure/queue/queues.ts  — updated
 import { Queue } from 'bullmq';
 import { getRedisClient } from '../redis/redis.client';
 
 export const QueueNames = {
   INVOICE: 'invoice',
   PAYMENT: 'payment',
-  NOTIFICATION: 'notification',
+  MARK_LATE: 'mark-late',
 } as const;
 
 export type QueueName = (typeof QueueNames)[keyof typeof QueueNames];
 
-// Job payload types — strictly typed, no any
 export interface GenerateInvoiceJobData {
   leaseId: string;
   ownerId: string;
-  billingPeriodStart: string; // ISO string — dates don't serialize safely as Date
+  billingPeriodStart: string; // ISO string — never Date in job payloads
 }
 
 export interface MarkLateInvoicesJobData {
@@ -28,18 +28,31 @@ export interface PaymentStatusJobData {
 
 const connection = getRedisClient();
 
+const defaultJobOptions = {
+  removeOnComplete: { count: 100 },
+  removeOnFail: { count: 500 },
+};
+
 export const invoiceQueue = new Queue<GenerateInvoiceJobData>(
   QueueNames.INVOICE,
   {
     connection,
     defaultJobOptions: {
+      ...defaultJobOptions,
       attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 5000, // 5s, 10s, 20s
-      },
-      removeOnComplete: { count: 100 },
-      removeOnFail: { count: 500 },
+      backoff: { type: 'exponential', delay: 5_000 },
+    },
+  },
+);
+
+export const markLateQueue = new Queue<MarkLateInvoicesJobData>(
+  QueueNames.MARK_LATE,
+  {
+    connection,
+    defaultJobOptions: {
+      ...defaultJobOptions,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 10_000 },
     },
   },
 );
@@ -49,13 +62,9 @@ export const paymentQueue = new Queue<PaymentStatusJobData>(
   {
     connection,
     defaultJobOptions: {
+      ...defaultJobOptions,
       attempts: 5,
-      backoff: {
-        type: 'exponential',
-        delay: 2000,
-      },
-      removeOnComplete: { count: 200 },
-      removeOnFail: { count: 1000 },
+      backoff: { type: 'exponential', delay: 2_000 },
     },
   },
 );

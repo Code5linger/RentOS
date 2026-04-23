@@ -7,7 +7,6 @@ import { RefreshTokenRepositoryImpl } from '@infrastructure/database/repositorie
 import { PropertyRepositoryImpl } from '@infrastructure/database/repositories/property.repository.impl';
 import { UnitRepositoryImpl } from '@infrastructure/database/repositories/unit.repository.impl';
 import { LeaseRepositoryImpl } from '@infrastructure/database/repositories/lease.repository.impl';
-import { RentInvoiceRepositoryImpl } from '@infrastructure/database/repositories/rent-invoice.repository.impl';
 import { PaymentRepositoryImpl } from '@infrastructure/database/repositories/payment.repository.impl';
 
 // Services
@@ -35,6 +34,14 @@ import { EndLeaseUseCase } from '@application/lease/use-cases/end-lease.use-case
 import { AuthController } from '@presentation/controllers/auth.controller';
 import { PropertyController } from '@presentation/controllers/property.controller';
 import { LeaseController } from '@presentation/controllers/lease.controller';
+
+import { RentInvoiceRepositoryImpl } from '@infrastructure/database/repositories/rent-invoice.repository.impl';
+import { GenerateInvoiceUseCase } from '@application/invoice/use-cases/generate-invoice.use-case';
+import { MarkLateInvoicesUseCase } from '@application/invoice/use-cases/mark-late-invoices.use-case';
+import { InvoiceScheduler } from '@infrastructure/scheduler/invoice.scheduler';
+import { InvoiceController } from '@presentation/controllers/invoice.controller';
+import { createInvoiceWorker } from '@infrastructure/queue/workers/invoice.worker';
+import { createMarkLateWorker } from '@infrastructure/queue/workers/mark-late.worker';
 
 // ── Repositories ────────────────────────────────────────────
 export const userRepository = new UserRepositoryImpl(prisma);
@@ -117,3 +124,29 @@ export const leaseController = new LeaseController(
   endLeaseUseCase,
   leaseRepository,
 );
+
+// — add after existing repository declarations —
+export const rentInvoiceRepository = new RentInvoiceRepositoryImpl(prisma);
+
+// ── Invoice Use Cases ────────────────────────────────────────
+export const generateInvoiceUseCase = new GenerateInvoiceUseCase(
+  rentInvoiceRepository,
+  leaseRepository,
+);
+
+export const markLateInvoicesUseCase = new MarkLateInvoicesUseCase(
+  rentInvoiceRepository,
+);
+
+// ── Scheduler ────────────────────────────────────────────────
+export const invoiceScheduler = new InvoiceScheduler(
+  leaseRepository,
+  rentInvoiceRepository,
+);
+
+// ── Workers (started in server.ts, not here) ─────────────────
+export const invoiceWorker = createInvoiceWorker(generateInvoiceUseCase);
+export const markLateWorker = createMarkLateWorker(markLateInvoicesUseCase);
+
+// ── Controllers ──────────────────────────────────────────────
+export const invoiceController = new InvoiceController(rentInvoiceRepository);

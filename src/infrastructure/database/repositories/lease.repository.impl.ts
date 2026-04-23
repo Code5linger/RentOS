@@ -46,6 +46,14 @@ export class LeaseRepositoryImpl implements ILeaseRepository {
     return rows.map(this.toEntity.bind(this));
   }
 
+  async findAllActive(): Promise<LeaseEntity[]> {
+    const rows = await this.db.lease.findMany({
+      where: { status: 'ACTIVE', deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows.map(this.toEntity.bind(this));
+  }
+
   async create(data: CreateLeaseData): Promise<LeaseEntity> {
     const row = await this.db.lease.create({
       data: {
