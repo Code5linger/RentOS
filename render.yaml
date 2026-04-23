@@ -1,0 +1,23 @@
+services:
+  # Web Service
+  - type: web
+    name: rentos-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - fromDatabase:
+          name: rentos-db
+          property: connectionString
+        key: DATABASE_URL
+
+  # PostgreSQL Database
+  - type: postgres
+    name: rentos-db
+    plan: free
+    ipAllowList: []
