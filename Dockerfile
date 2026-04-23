@@ -8,6 +8,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 5000
 
-CMD ["node", "src/server.ts"]
+# CMD ["node", "src/server.ts"]
+CMD ["node", "dist/server.js"] 
