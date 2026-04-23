@@ -5,7 +5,7 @@
     "moduleResolution": "NodeNext",
     "ignoreDeprecations": "5.0",
 
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
 
     "strict": true,

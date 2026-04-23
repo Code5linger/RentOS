@@ -1,0 +1,271 @@
+// schema.prisma
+// RentOS — Production DB Schema
+// Phase 1
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  TENANT
+  ADMIN
+}
+
+enum LeaseStatus {
+  ACTIVE
+  ENDED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIAL
+  PAID
+  LATE
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_BANKING // bKash, Nagad, Rocket
+  CHEQUE
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         Role
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdBy    String?   @map("created_by") // FK to User.id — nullable for seed/admin
+  deletedAt    DateTime? @map("deleted_at")
+
+  properties     Property[]
+  leasesAsTenant Lease[]        @relation("TenantLeases")
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash") // store hash, never raw token
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  ipAddress String?   @map("ip_address")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// PROPERTY
+// ─────────────────────────────────────────────
+
+model Property {
+  id        String    @id @default(uuid())
+  ownerId   String    @map("owner_id")
+  name      String
+  address   String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String    @map("created_by")
+  deletedAt DateTime? @map("deleted_at")
+
+  owner User   @relation(fields: [ownerId], references: [id])
+  units Unit[]
+
+  @@index([ownerId])
+  @@index([ownerId, deletedAt])
+  @@map("properties")
+}
+
+// ─────────────────────────────────────────────
+// UNIT
+// ─────────────────────────────────────────────
+
+model Unit {
+  id         String    @id @default(uuid())
+  propertyId String    @map("property_id")
+  unitNumber String    @map("unit_number")
+  rentAmount Decimal   @map("rent_amount") @db.Decimal(12, 2) // NEVER float
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  createdBy  String    @map("created_by")
+  deletedAt  DateTime? @map("deleted_at")
+
+  property Property @relation(fields: [propertyId], references: [id])
+  leases   Lease[]
+
+  @@unique([propertyId, unitNumber]) // no duplicate unit numbers per property
+  @@index([propertyId])
+  @@index([propertyId, deletedAt])
+  @@map("units")
+}
+
+// ─────────────────────────────────────────────
+// LEASE
+// ─────────────────────────────────────────────
+
+model Lease {
+  id          String      @id @default(uuid())
+  unitId      String      @map("unit_id")
+  tenantId    String      @map("tenant_id")
+  ownerId     String      @map("owner_id") // denormalized for query perf
+  startDate   DateTime    @map("start_date") @db.Date
+  endDate     DateTime?   @map("end_date") @db.Date // nullable = open-ended lease
+  monthlyRent Decimal     @map("monthly_rent") @db.Decimal(12, 2)
+  billingDay  Int         @map("billing_day") // 1–28, enforced via CHECK
+  status      LeaseStatus @default(ACTIVE)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  createdBy   String      @map("created_by")
+  deletedAt   DateTime?   @map("deleted_at")
+
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  tenant       User          @relation("TenantLeases", fields: [tenantId], references: [id])
+  rentInvoices RentInvoice[]
+
+  @@index([ownerId])
+  @@index([tenantId])
+  @@index([unitId])
+  @@index([status])
+  @@index([ownerId, status])
+  @@map("leases")
+}
+
+// ─────────────────────────────────────────────
+// RENT INVOICE
+// ─────────────────────────────────────────────
+
+model RentInvoice {
+  id                 String        @id @default(uuid())
+  leaseId            String        @map("lease_id")
+  ownerId            String        @map("owner_id") // denormalized
+  billingPeriodStart DateTime      @map("billing_period_start") @db.Date
+  billingPeriodEnd   DateTime      @map("billing_period_end") @db.Date
+  totalAmount        Decimal       @map("total_amount") @db.Decimal(12, 2)
+  paidAmount         Decimal       @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  dueDate            DateTime      @map("due_date") @db.Date
+  status             InvoiceStatus @default(PENDING)
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  createdBy          String        @map("created_by")
+  deletedAt          DateTime?     @map("deleted_at")
+
+  lease    Lease     @relation(fields: [leaseId], references: [id])
+  payments Payment[]
+
+  // CRITICAL: one invoice per lease per billing period — prevents duplicate generation
+  @@unique([leaseId, billingPeriodStart])
+  @@index([ownerId])
+  @@index([ownerId, status])
+  @@index([leaseId])
+  @@index([dueDate, status]) // for late-detection job
+  @@index([ownerId, deletedAt])
+  @@map("rent_invoices")
+}
+
+// ─────────────────────────────────────────────
+// PAYMENT
+// ─────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(uuid())
+  invoiceId        String        @map("invoice_id")
+  ownerId          String        @map("owner_id") // denormalized
+  amount           Decimal       @db.Decimal(12, 2)
+  method           PaymentMethod
+  status           PaymentStatus @default(INITIATED)
+  transactionRef   String?       @unique @map("transaction_ref") // external ref
+  idempotencyKeyId String?       @unique @map("idempotency_key_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  createdBy        String        @map("created_by")
+  // No deletedAt — payments are immutable financial records
+
+  invoice        RentInvoice     @relation(fields: [invoiceId], references: [id])
+  idempotencyKey IdempotencyKey? @relation(fields: [idempotencyKeyId], references: [id])
+
+  @@index([invoiceId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([ownerId, status])
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// IDEMPOTENCY KEY
+// ─────────────────────────────────────────────
+
+model IdempotencyKey {
+  id           String   @id @default(uuid())
+  ownerId      String   @map("owner_id")
+  key          String   @unique // client-supplied UUID in header
+  responseHash String?  @map("response_hash") // SHA256 of response payload
+  expiresAt    DateTime @map("expires_at") // 24h TTL typical
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  payment Payment?
+
+  @@index([ownerId, key])
+  @@index([expiresAt]) // for cleanup job
+  @@map("idempotency_keys")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String   @map("actor_id")
+  ownerId   String   @map("owner_id") // which tenant's data was touched
+  entity    String // e.g. "Lease", "Payment"
+  entityId  String   @map("entity_id")
+  action    String // e.g. "CREATE", "UPDATE", "STATUS_CHANGE"
+  before    Json? // snapshot before
+  after     Json? // snapshot after
+  createdAt DateTime @default(now()) @map("created_at")
+  ipAddress String?  @map("ip_address")
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([ownerId])
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
