@@ -9,8 +9,8 @@ RUN npm ci --ignore-scripts
 
 COPY . .
 
-RUN npm run build
 RUN npx prisma generate
+RUN npm run build
 
 # Verify that the compiled files exist
 RUN ls -la dist/ || (echo "dist folder not found" && exit 1)
