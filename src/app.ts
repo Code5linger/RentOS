@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
-  res.send('RentOS Backend Server is Running 💨');
+  res.send('RentOS Backend Server is Running 🚀. Connected to DB!');
 });
 
 export default app;
