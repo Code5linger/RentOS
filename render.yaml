@@ -11,10 +11,10 @@ services:
         value: production
       - key: PORT
         value: 5000
-      - fromDatabase:
+      - key: DATABASE_URL
+        fromDatabase:
           name: rentos-db
           property: connectionString
-        key: DATABASE_URL
 
   # PostgreSQL Database
   - type: postgres
