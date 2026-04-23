@@ -1,6 +1,9 @@
+# docker-compose.yml
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: development
     ports:
       - '3000:3000'
     env_file: .env
@@ -13,6 +16,25 @@ services:
       - .:/app
       - /app/node_modules
     command: npm run dev
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: development
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    # Workers run from the same entrypoint — server.ts starts workers
+    # In production you'd split this into a separate worker process
+    command: npm run worker
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -24,6 +46,23 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rentos']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rentos
+      POSTGRES_PASSWORD: rentos_secret
+      POSTGRES_DB: rentos_test
+    ports:
+      - '5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U rentos']
       interval: 5s
@@ -41,24 +80,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # BullMQ dashboard — development only
+  bull-board:
+    image: deadly0/bull-board
+    ports:
+      - '3001:3000'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    profiles:
+      - debug # only starts with: docker compose --profile debug up
 
 volumes:
   postgres_data:
   redis_data:
-
-  # Add to docker-compose.yml under services:
-  postgres-test:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: rentos
-      POSTGRES_PASSWORD: rentos_secret
-      POSTGRES_DB: rentos_test
-    ports:
-      - '5433:5432' # Different port — dev and test DBs never collide
-    tmpfs:
-      - /var/lib/postgresql/data # In-memory — tests run faster, data never persists
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U rentos']
-      interval: 5s
-      timeout: 5s
-      retries: 5
