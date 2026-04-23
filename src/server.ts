@@ -16,7 +16,7 @@ app.get('/health', (req, res) => {
 
 // Basic route
 app.get('/', (req, res) => {
-  res.send('RentOS Backend Server is Running 🚀');
+  res.send('RentOS Backend Server is Running 🚀🚀');
 });
 
 async function startServer() {
