@@ -7,7 +7,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, TypeScript + Express!');
+  res.send('RentOS');
 });
 
 app.listen(PORT, '0.0.0.0', () => {
