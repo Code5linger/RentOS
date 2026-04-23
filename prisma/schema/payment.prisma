@@ -1,0 +1,23 @@
+model Payment {
+    id               String        @id @default(uuid())
+    invoiceId        String        @map("invoice_id")
+    ownerId          String        @map("owner_id") // denormalized
+    amount           Decimal       @db.Decimal(12, 2)
+    method           PaymentMethod
+    status           PaymentStatus @default(INITIATED)
+    transactionRef   String?       @unique @map("transaction_ref") // external ref
+    idempotencyKeyId String?       @unique @map("idempotency_key_id")
+    createdAt        DateTime      @default(now()) @map("created_at")
+    updatedAt        DateTime      @updatedAt @map("updated_at")
+    createdBy        String        @map("created_by")
+    // No deletedAt — payments are immutable financial records
+
+    invoice        RentInvoice     @relation(fields: [invoiceId], references: [id])
+    idempotencyKey IdempotencyKey? @relation(fields: [idempotencyKeyId], references: [id])
+
+    @@index([invoiceId])
+    @@index([ownerId])
+    @@index([status])
+    @@index([ownerId, status])
+    @@map("payments")
+}

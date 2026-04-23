@@ -1,0 +1,27 @@
+model RentInvoice {
+    id                 String        @id @default(uuid())
+    leaseId            String        @map("lease_id")
+    ownerId            String        @map("owner_id") // denormalized
+    billingPeriodStart DateTime      @map("billing_period_start") @db.Date
+    billingPeriodEnd   DateTime      @map("billing_period_end") @db.Date
+    totalAmount        Decimal       @map("total_amount") @db.Decimal(12, 2)
+    paidAmount         Decimal       @default(0) @map("paid_amount") @db.Decimal(12, 2)
+    dueDate            DateTime      @map("due_date") @db.Date
+    status             InvoiceStatus @default(PENDING)
+    createdAt          DateTime      @default(now()) @map("created_at")
+    updatedAt          DateTime      @updatedAt @map("updated_at")
+    createdBy          String        @map("created_by")
+    deletedAt          DateTime?     @map("deleted_at")
+
+    lease    Lease     @relation(fields: [leaseId], references: [id])
+    payments Payment[]
+
+    // CRITICAL: one invoice per lease per billing period — prevents duplicate generation
+    @@unique([leaseId, billingPeriodStart])
+    @@index([ownerId])
+    @@index([ownerId, status])
+    @@index([leaseId])
+    @@index([dueDate, status]) // for late-detection job
+    @@index([ownerId, deletedAt])
+    @@map("rent_invoices")
+}

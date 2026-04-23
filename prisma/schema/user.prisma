@@ -1,0 +1,20 @@
+model User {
+    id           String    @id @default(uuid())
+    email        String    @unique
+    passwordHash String    @map("password_hash")
+    role         Role
+    createdAt    DateTime  @default(now()) @map("created_at")
+    updatedAt    DateTime  @updatedAt @map("updated_at")
+    createdBy    String?   @map("created_by") // FK to User.id — nullable for seed/admin
+    deletedAt    DateTime? @map("deleted_at")
+
+    properties     Property[]
+    leasesAsTenant Lease[]        @relation("TenantLeases")
+    refreshTokens  RefreshToken[]
+    auditLogs      AuditLog[]
+
+    @@index([email])
+    @@index([role])
+    @@index([deletedAt])
+    @@map("users")
+}

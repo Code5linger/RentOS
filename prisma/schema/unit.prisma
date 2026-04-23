@@ -1,0 +1,18 @@
+model Unit {
+    id         String    @id @default(uuid())
+    propertyId String    @map("property_id")
+    unitNumber String    @map("unit_number")
+    rentAmount Decimal   @map("rent_amount") @db.Decimal(12, 2) // NEVER float
+    createdAt  DateTime  @default(now()) @map("created_at")
+    updatedAt  DateTime  @updatedAt @map("updated_at")
+    createdBy  String    @map("created_by")
+    deletedAt  DateTime? @map("deleted_at")
+
+    property Property @relation(fields: [propertyId], references: [id])
+    leases   Lease[]
+
+    @@unique([propertyId, unitNumber]) // no duplicate unit numbers per property
+    @@index([propertyId])
+    @@index([propertyId, deletedAt])
+    @@map("units")
+}
