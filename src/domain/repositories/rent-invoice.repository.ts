@@ -14,6 +14,10 @@ export interface IRentInvoiceRepository {
     ownerId: string,
     status?: InvoiceStatus,
   ): Promise<RentInvoiceEntity[]>;
+  findAllByLease(
+    leaseId: string,
+    ownerId: string,
+  ): Promise<RentInvoiceEntity[]>;
   create(data: CreateInvoiceData): Promise<RentInvoiceEntity>;
   updatePaidAmount(
     id: string,

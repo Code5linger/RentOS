@@ -57,7 +57,7 @@ export class GetMyDashboardUseCase {
     let pendingCount = 0;
     let outstanding = '0.00';
 
-    const { Decimal } = await import('decimal.js');
+    const Decimal = (await import('decimal.js')).default;
     let outstandingDecimal = new Decimal('0.00');
 
     for (const inv of allInvoices) {

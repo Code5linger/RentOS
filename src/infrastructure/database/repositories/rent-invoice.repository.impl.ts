@@ -71,17 +71,6 @@ export class RentInvoiceRepositoryImpl implements IRentInvoiceRepository {
     return rows.map(this.toEntity.bind(this));
   }
 
-  async findAllByLease(
-    leaseId: string,
-    ownerId: string,
-  ): Promise<RentInvoiceEntity[]> {
-    const rows = await this.db.rentInvoice.findMany({
-      where: { leaseId, ownerId, deletedAt: null },
-      orderBy: { billingPeriodStart: 'desc' },
-    });
-    return rows.map(this.toEntity.bind(this));
-  }
-
   async create(data: CreateInvoiceData): Promise<RentInvoiceEntity> {
     try {
       const row = await this.db.rentInvoice.create({
@@ -103,7 +92,7 @@ export class RentInvoiceRepositoryImpl implements IRentInvoiceRepository {
       // (leaseId, billingPeriodStart) — this is expected on retry, not an error
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        (err as Prisma.PrismaClientKnownRequestError).code === 'P2002'
       ) {
         throw new ConflictError(
           `Invoice already exists for lease ${data.leaseId} period ${data.billingPeriodStart.toISOString()}`,
@@ -207,12 +196,22 @@ export class RentInvoiceRepositoryImpl implements IRentInvoiceRepository {
     return invoice;
   }
 
-  // Add to src/infrastructure/database/repositories/unit.repository.impl.ts
-  async findByIdForTenant(id: string): Promise<UnitEntity> {
-    const row = await this.db.unit.findFirst({
-      where: { id, deletedAt: null },
+  async findAllByLease(
+    leaseId: string,
+    ownerId: string,
+  ): Promise<RentInvoiceEntity[]> {
+    const rows = await this.db.rentInvoice.findMany({
+      where: {
+        leaseId,
+        ownerId,
+        deletedAt: null,
+      },
+      orderBy: {
+        dueDate: 'asc',
+      },
     });
-    if (!row) throw new NotFoundError('Unit', id);
-    return this.toEntity(row);
+
+    return rows.map((row: any) => this.toEntity(row));
   }
-}
+
+  }

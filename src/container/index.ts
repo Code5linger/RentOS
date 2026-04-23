@@ -14,9 +14,9 @@ import { PasswordService } from '@infrastructure/auth/password.service';
 import { TokenService } from '@infrastructure/auth/token.service';
 
 // Auth use cases
-import { RegisterUseCase } from '@application/auth/use-cases/register.use-case';
-import { LoginUseCase } from '@application/auth/use-cases/login.use-case';
-import { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case';
+import { RegisterUseCaseImpl } from '@application/auth/use-cases/register.use-case';
+import { LoginUseCaseImpl } from '@application/auth/use-cases/login.use-case';
+import { RefreshTokenUseCaseImpl } from '@application/auth/use-cases/refresh-token.use-case';
 
 // Property use cases
 import { CreatePropertyUseCase } from '@application/property/use-cases/create-property.use-case';
@@ -57,19 +57,19 @@ export const passwordService = new PasswordService();
 export const tokenService = new TokenService();
 
 // ── Auth Use Cases ───────────────────────────────────────────
-export const registerUseCase = new RegisterUseCase(
+export const registerUseCase = new RegisterUseCaseImpl(
   userRepository,
   refreshTokenRepository,
   passwordService,
   tokenService,
 );
-export const loginUseCase = new LoginUseCase(
+export const loginUseCase = new LoginUseCaseImpl(
   userRepository,
   refreshTokenRepository,
   passwordService,
   tokenService,
 );
-export const refreshTokenUseCase = new RefreshTokenUseCase(
+export const refreshTokenUseCase = new RefreshTokenUseCaseImpl(
   userRepository,
   refreshTokenRepository,
   tokenService,
@@ -124,9 +124,6 @@ export const leaseController = new LeaseController(
   endLeaseUseCase,
   leaseRepository,
 );
-
-// — add after existing repository declarations —
-export const rentInvoiceRepository = new RentInvoiceRepositoryImpl(prisma);
 
 // ── Invoice Use Cases ────────────────────────────────────────
 export const generateInvoiceUseCase = new GenerateInvoiceUseCase(

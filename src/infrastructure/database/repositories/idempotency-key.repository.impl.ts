@@ -25,7 +25,7 @@ export class IdempotencyKeyRepositoryImpl implements IIdempotencyKeyRepository {
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        (err as Prisma.PrismaClientKnownRequestError).code === 'P2002'
       ) {
         throw new ConflictError(`Idempotency key already exists: ${data.key}`);
       }

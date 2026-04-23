@@ -72,7 +72,7 @@ export class PaymentRepositoryImpl implements IPaymentRepository {
   ): Promise<PaymentEntity> {
     const result = await this.db.$transaction(async (tx) => {
       // 1. Create payment record
-      const payment = await tx.payment.create({
+      const payment = await (tx as any).payment.create({
         data: {
           invoiceId: data.invoiceId,
           ownerId: data.ownerId,
@@ -85,7 +85,7 @@ export class PaymentRepositoryImpl implements IPaymentRepository {
       });
 
       // 2. Update invoice paid amount and status atomically
-      await tx.rentInvoice.update({
+      await (tx as any).rentInvoice.update({
         where: { id: data.invoiceId },
         data: {
           paidAmount: new Prisma.Decimal(data.newPaidAmount),

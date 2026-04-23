@@ -8,11 +8,7 @@ export const InitiatePaymentSchema = z.object({
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Invalid amount — use "5000" or "5000.50"')
     .refine((val) => parseFloat(val) > 0, 'Amount must be greater than zero'),
-  method: z.nativeEnum(PaymentMethod, {
-    errorMap: () => ({
-      message: `Method must be one of: ${Object.values(PaymentMethod).join(', ')}`,
-    }),
-  }),
+  method: z.nativeEnum(PaymentMethod),
 });
 
 export const ConfirmPaymentSchema = z.object({

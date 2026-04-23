@@ -68,7 +68,7 @@ export class UnitRepositoryImpl implements IUnitRepository {
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        (err as Prisma.PrismaClientKnownRequestError).code === 'P2002'
       ) {
         throw new ConflictError(
           `Unit number '${data.unitNumber}' already exists in this property`,
@@ -99,7 +99,7 @@ export class UnitRepositoryImpl implements IUnitRepository {
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        (err as Prisma.PrismaClientKnownRequestError).code === 'P2002'
       ) {
         throw new ConflictError(
           `Unit number '${data.unitNumber}' already exists in this property`,
@@ -123,6 +123,21 @@ export class UnitRepositoryImpl implements IUnitRepository {
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async findByIdForTenant(id: string): Promise<UnitEntity> {
+    const row = await this.db.unit.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!row) {
+      throw new NotFoundError('Unit not found', 'UNIT_NOT_FOUND');
+    }
+
+    return this.toEntity(row);
   }
 
   private toEntity(raw: {

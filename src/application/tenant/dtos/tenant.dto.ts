@@ -7,6 +7,4 @@ export const TenantGetInvoicesQuerySchema = z.object({
   leaseId: z.string().uuid().optional(),
 });
 
-export type TenantGetInvoicesQueryDto = z.infer
-  typeof TenantGetInvoicesQuerySchema
->;
+export type TenantGetInvoicesQueryDto = z.infer<typeof TenantGetInvoicesQuerySchema>;

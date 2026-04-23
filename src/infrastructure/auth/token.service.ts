@@ -22,13 +22,10 @@ export interface TokenPair {
 }
 
 export class TokenService {
-  generateTokenPair(payload: Omit<AccessTokenPayload, never>): TokenPair {
+  async generateTokenPair(payload: Omit<AccessTokenPayload, never>): Promise<TokenPair> {
     const jti = crypto.randomUUID();
 
-    const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-      issuer: 'rentos',
-    });
+    const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET);
 
     const rawRefreshToken = crypto.randomBytes(64).toString('hex');
 
@@ -42,7 +39,6 @@ export class TokenService {
     const refreshToken = jwt.sign(
       { sub: payload.sub, jti } satisfies RefreshTokenPayload,
       env.JWT_REFRESH_SECRET,
-      { expiresIn: env.JWT_REFRESH_EXPIRES_IN, issuer: 'rentos' },
     );
 
     return { accessToken, refreshToken, refreshTokenHash, jti };
