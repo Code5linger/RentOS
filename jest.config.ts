@@ -14,7 +14,7 @@ const config: Config = {
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@container$': '<rootDir>/src/container/index',
   },
-  setupFilesAfterFramework: ['<rootDir>/tests/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 30_000, // integration tests need more time
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/server.ts'],
   coverageThresholds: {

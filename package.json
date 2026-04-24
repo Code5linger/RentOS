@@ -9,8 +9,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "studio": "prisma studio",
     "generate": "prisma generate",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },
